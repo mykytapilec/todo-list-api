@@ -46,3 +46,24 @@ export const getTodos = async (userId: number, options: GetTodosOptions) => {
     total,
   };
 };
+
+interface UpdateTodoData {
+  title?: string;
+  description?: string;
+  completed?: boolean;
+}
+
+export const updateTodo = async (todoId: number, userId: number, data: UpdateTodoData) => {
+  const todo = await prisma.todo.findUnique({
+    where: { id: todoId },
+  });
+
+  if (!todo || todo.userId !== userId) {
+    return null;
+  }
+
+  return prisma.todo.update({
+    where: { id: todoId },
+    data,
+  });
+};
