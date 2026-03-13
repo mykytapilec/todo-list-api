@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { createTodo, getTodos, updateTodo } from "../services/todoService";
+import { createTodo, deleteTodo, getTodos, updateTodo } from "../services/todoService";
 
 export const createTodoController = async (req: Request, res: Response) => {
   try {
@@ -51,6 +51,24 @@ export const updateTodoController = async (req: Request, res: Response) => {
     }
 
     res.json(updatedTodo);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const deleteTodoController = async (req: Request, res: Response) => {
+  try {
+    const todoId = parseInt(req.params.id as string);
+    const userId = (req as any).user.id;
+
+    const deleted = await deleteTodo(todoId, userId);
+
+    if (!deleted) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    res.status(204).send();
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });

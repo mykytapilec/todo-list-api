@@ -67,3 +67,14 @@ export const updateTodo = async (todoId: number, userId: number, data: UpdateTod
     data,
   });
 };
+
+export const deleteTodo = async (todoId: number, userId: number) => {
+  const todo = await prisma.todo.findUnique({ where: { id: todoId } });
+
+  if (!todo || todo.userId !== userId) {
+    return false;
+  }
+
+  await prisma.todo.delete({ where: { id: todoId } });
+  return true;
+};
