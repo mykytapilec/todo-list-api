@@ -15,3 +15,34 @@ export const createTodo = async (data: TodoData, userId: number) => {
     },
   });
 };
+
+interface GetTodosOptions {
+  page: number;
+  limit: number;
+  completed?: boolean;
+}
+
+export const getTodos = async (userId: number, options: GetTodosOptions) => {
+  const { page, limit, completed } = options;
+  const skip = (page - 1) * limit;
+
+  const where: any = { userId };
+  if (completed !== undefined) where.completed = completed;
+
+  const [todos, total] = await Promise.all([
+    prisma.todo.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.todo.count({ where }),
+  ]);
+
+  return {
+    data: todos,
+    page,
+    limit,
+    total,
+  };
+};
