@@ -1,3 +1,4 @@
+// /src/services/todoService.ts
 import prisma from "../config/prisma";
 
 interface TodoData {
@@ -5,31 +6,33 @@ interface TodoData {
   description?: string;
 }
 
+// Создание новой задачи
 export const createTodo = async (data: TodoData, userId: number) => {
   return prisma.todo.create({
     data: {
       title: data.title,
       description: data.description,
       userId,
-      completed: false,
+      completed: false, // по умолчанию
     },
   });
 };
 
+// Получение списка задач с фильтрацией, пагинацией и сортировкой
 export const getTodos = async (
   userId: number,
   page: number,
   limit: number,
   completed?: boolean,
   sortBy: "createdAt" | "title" = "createdAt",
-  order: "asc" | "desc" = "desc"
+  order: "asc" | "desc" = "desc",
+  titleFilter?: string
 ) => {
   const skip = (page - 1) * limit;
 
   const where: any = { userId };
-  if (completed !== undefined) {
-    where.completed = completed;
-  }
+  if (completed !== undefined) where.completed = completed;
+  if (titleFilter) where.title = { contains: titleFilter, mode: "insensitive" };
 
   const [data, total] = await Promise.all([
     prisma.todo.findMany({
@@ -50,14 +53,13 @@ interface UpdateTodoData {
   completed?: boolean;
 }
 
+// Обновление задачи по id + userId
 export const updateTodo = async (todoId: number, userId: number, data: UpdateTodoData) => {
-  const todo = await prisma.todo.findUnique({
-    where: { id: todoId },
+  const todo = await prisma.todo.findFirst({
+    where: { id: todoId, userId },
   });
 
-  if (!todo || todo.userId !== userId) {
-    return null;
-  }
+  if (!todo) return null;
 
   return prisma.todo.update({
     where: { id: todoId },
@@ -66,11 +68,11 @@ export const updateTodo = async (todoId: number, userId: number, data: UpdateTod
 };
 
 export const deleteTodo = async (todoId: number, userId: number) => {
-  const todo = await prisma.todo.findUnique({ where: { id: todoId } });
+  const todo = await prisma.todo.findFirst({
+    where: { id: todoId, userId },
+  });
 
-  if (!todo || todo.userId !== userId) {
-    return false;
-  }
+  if (!todo) return false;
 
   await prisma.todo.delete({ where: { id: todoId } });
   return true;
