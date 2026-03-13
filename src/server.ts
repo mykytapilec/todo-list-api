@@ -7,6 +7,7 @@ import cors from "cors";
 
 
 import authRoutes from "./routes/authRoutes";
+import { authMiddleware } from "./middleware/authMiddleware";
 
 const app = express();
 
@@ -16,6 +17,13 @@ app.use("/api", authRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "Todo List API is running" });
+});
+
+app.get("/api/protected", authMiddleware, (req, res) => {
+  res.json({
+    message: "You accessed a protected route",
+    user: (req as any).user
+  });
 });
 
 const PORT = process.env.PORT || 3000;
