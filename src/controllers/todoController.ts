@@ -26,10 +26,19 @@ export const getTodosController = async (req: Request, res: Response) => {
 
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
-    const completedQuery = req.query.completed as string;
-    const completed = completedQuery === "true" ? true : completedQuery === "false" ? false : undefined;
 
-    const todos = await getTodos(userId, { page, limit, completed });
+    let completed: boolean | undefined = undefined;
+    if (req.query.completed !== undefined) {
+      completed = req.query.completed === "true";
+    }
+
+    let sortBy: "createdAt" | "title" = "createdAt";
+    if (req.query.sortBy === "title") sortBy = "title";
+    if (req.query.sortBy === "createdAt") sortBy = "createdAt";
+
+    const order = (req.query.order as string) === "asc" ? "asc" : "desc";
+
+    const todos = await getTodos(userId, page, limit, completed, sortBy, order);
 
     res.json(todos);
   } catch (error) {

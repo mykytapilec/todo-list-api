@@ -16,35 +16,32 @@ export const createTodo = async (data: TodoData, userId: number) => {
   });
 };
 
-interface GetTodosOptions {
-  page: number;
-  limit: number;
-  completed?: boolean;
-}
-
-export const getTodos = async (userId: number, options: GetTodosOptions) => {
-  const { page, limit, completed } = options;
+export const getTodos = async (
+  userId: number,
+  page: number,
+  limit: number,
+  completed?: boolean,
+  sortBy: "createdAt" | "title" = "createdAt",
+  order: "asc" | "desc" = "desc"
+) => {
   const skip = (page - 1) * limit;
 
   const where: any = { userId };
-  if (completed !== undefined) where.completed = completed;
+  if (completed !== undefined) {
+    where.completed = completed;
+  }
 
-  const [todos, total] = await Promise.all([
+  const [data, total] = await Promise.all([
     prisma.todo.findMany({
       where,
       skip,
       take: limit,
-      orderBy: { createdAt: "desc" },
+      orderBy: { [sortBy]: order },
     }),
     prisma.todo.count({ where }),
   ]);
 
-  return {
-    data: todos,
-    page,
-    limit,
-    total,
-  };
+  return { data, page, limit, total };
 };
 
 interface UpdateTodoData {
